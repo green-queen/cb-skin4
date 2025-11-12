@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+
+  :root {
+    --width: 300px;
+    --x-speed: 13s;
+    --y-speed: 7s;
+    --transition-speed: 2.2s;
+  }
+
+  .x {
+    animation: x var(--x-speed) linear infinite alternate;
+  }
+  .x2 {
+    animation: x2 var(--x-speed) linear infinite alternate;
+  }
+  .y {
+    animation: y var(--y-speed) linear infinite alternate;
+  }
+
+  @keyframes x {
+    100% {
+      /* use a CSS variable for the endpoint so JS can set a random value per element
+         fallback preserves current behavior */
+      transform: translateX(var(--x-end, calc(100vw - var(--width))));
+    }
+  }
+  @keyframes x2 {
+    100% {
+      transform: translateX(var(--x-end, calc(-100vw + var(--width))));
+    }
+  }
+
+  @keyframes y {
+    100% {
+      transform: translateY(var(--y-end, calc(100vh - var(--width))));
+    }
+  }
+
+  .inputs {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 300px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+  }
+  .inputs label {
+    flex: 1;
+  }
+  .inputs input {
+    width: 100%;
+  }
+
+</style>
+<script>
+const cards = document.querySelectorAll(".card-img-top");
+let last = 0;
+let changeSpeed = 1500;
+let rAF;
+
+function render(now) {
+  if (!last || now - last >= changeSpeed) {
+    last = now;
+  }
+  rAF = requestAnimationFrame(render);
+}
+
+const random = () => {
+  return Math.floor((Math.random() * 1000000));
+};
+
+render(last);
+
+const root = document.documentElement;
+
+// ----- randomize animation endpoints and speeds -----
+// This sets per-element CSS variables that the keyframes use as endpoints.
+// Elements with class .x or .x2 get --x-end and --x-speed, .y gets --y-end and --y-speed.
+function setRandomMotion() {
+  const elems = document.querySelectorAll('.x, .x2, .y');
+  // --width may be like "300px"; parseInt will give 300
+  const rootStyles = getComputedStyle(document.documentElement);
+  const widthVar = rootStyles.getPropertyValue('--width') || '300px';
+  const w = parseInt(widthVar, 10) || 300;
+
+  elems.forEach(el => {
+    if (el.classList.contains('x') || el.classList.contains('x2')) {
+      const maxX = Math.max(0, window.innerWidth - w);
+      // random endpoint between 0 and maxX, negative for x2 so it moves left
+      const randX = Math.random() * maxX;
+      const xEnd = el.classList.contains('x2') ? -randX : randX;
+      el.style.setProperty('--x-end', `${xEnd}px`);
+      // random speed between 6s and 20s (adjust as desired)
+      const xSpeed = (6 + Math.random() * 14).toFixed(2) + 's';
+      el.style.setProperty('--x-speed', xSpeed);
+    }
+
+    if (el.classList.contains('y')) {
+      const maxY = Math.max(0, window.innerHeight - w);
+      const yEnd = Math.random() * maxY;
+      el.style.setProperty('--y-end', `${yEnd}px`);
+      // random vertical speed between 4s and 14s
+      const ySpeed = (4 + Math.random() * 10).toFixed(2) + 's';
+      el.style.setProperty('--y-speed', ySpeed);
+    }
+  });
+}
+
+// run once and on resize/load so values adapt to viewport
+setRandomMotion();
+window.addEventListener('resize', setRandomMotion);
+window.addEventListener('load', setRandomMotion);
+
+document.querySelectorAll('.x, .x2, .y').forEach(el => {
+  el.addEventListener('mouseover', () => {
+    el.style.animationPlayState = 'paused';
+    const cardSubjects = el.querySelector('.card-subjects');
+    if (cardSubjects) {
+      cardSubjects.style.opacity = '100';
+    }
+    const cardTitle = el.querySelector('.card-title');
+    if (cardTitle) {
+      cardTitle.style.opacity = '100';
+}});
+  el.addEventListener('mouseleave', () => {
+    el.style.animationPlayState = 'running';
+    const cardSubjects = el.querySelector('.card-subjects');
+    if (cardSubjects) {
+      cardSubjects.style.opacity = '0';
+    }
+    const cardTitle = el.querySelector('.card-title');
+    if (cardTitle) {
+      cardTitle.style.opacity = '0';
+  }});
+});
+</script>
+</head>
+</html>
+
